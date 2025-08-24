@@ -1,0 +1,8 @@
+portia-sdk-python[google]
+slack_sdk
+PyGithub
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+notion-client
+werkzeug
