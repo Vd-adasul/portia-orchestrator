@@ -1,4 +1,5 @@
-portia-sdk-python[google]
+portia-sdk-python
+google-genai
 slack_sdk
 PyGithub
 google-api-python-client
