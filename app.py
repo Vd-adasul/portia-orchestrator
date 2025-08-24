@@ -5,10 +5,10 @@ from portia_sdk.main import Portia
 from portia_sdk.llms.google import GoogleGenAI
 
 # Import all your tool functions
-from api.tools.communication import communication_tools
-from api.tools.github import github_tools
-from api.tools.scheduling import scheduling_tools
-from api.tools.productivity import productivity_tools
+from tools.communication import communication_tools
+from tools.github import github_tools
+from tools.scheduling import scheduling_tools
+from tools.productivity import productivity_tools
 
 # Initialize the Flask App
 app = Flask(__name__, static_folder='static', template_folder='templates')
