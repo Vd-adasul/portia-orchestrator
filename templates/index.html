@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portia Orchestrator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f7f7f8;
+            font-family: 'Inter', sans-serif;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        .task-card {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+        .task-card.removing {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        .btn-approve { background-color: #28a745; }
+        .btn-approve:hover { background-color: #218838; }
+        .btn-reject { background-color: #dc3545; }
+        .btn-reject:hover { background-color: #c82333; }
+        .btn-refresh { background-color: #007bff; }
+        .btn-refresh:hover { background-color: #0069d9; }
+        .action-code {
+            background-color: #e9ecef;
+            border-radius: 0.25rem;
+            padding: 0.5rem 0.75rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: #495057;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div id="app" class="container mx-auto p-4 md:p-8 max-w-4xl">
+
+        <header class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Portia Daily Plan</h1>
+                <p class="text-gray-600">Your AI-powered command center. Review and approve actions below.</p>
+            </div>
+            <button id="refresh-btn" class="btn-refresh text-white font-bold py-2 px-4 rounded-lg flex items-center space-x-2 transition-transform duration-150 hover:scale-105">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V4a1 1 0 011-1zm10 8a1 1 0 011-1v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 111.885-.666A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-2.566-11.601 1 1 0 11.666 1.885A5.002 5.002 0 0013 14.001V11a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                <span>Refresh</span>
+            </button>
+        </header>
+
+        <main id="task-list-container">
+            <div id="loader" class="text-center py-10">
+                <svg class="animate-spin h-8 w-8 text-gray-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <p class="mt-2 text-gray-600">Fetching your daily plan...</p>
+            </div>
+            <div id="empty-state" class="hidden text-center py-10 bg-white rounded-lg shadow">
+                <p class="text-xl font-semibold">All Clear! ✨</p>
+                <p class="text-gray-600 mt-1">You have no pending actions. Click refresh to check again.</p>
+            </div>
+            <div id="error-state" class="hidden text-center py-10 bg-red-50 border border-red-200 rounded-lg shadow">
+                <p class="text-xl font-semibold text-red-700">An Error Occurred</p>
+                <p id="error-message" class="text-red-600 mt-1">Could not fetch the daily plan. Please try again.</p>
+            </div>
+        </main>
+        
+        <div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white py-2 px-5 rounded-lg shadow-lg opacity-0 transition-opacity duration-300">
+            <p id="toast-message"></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const taskListContainer = document.getElementById('task-list-container');
+            const loader = document.getElementById('loader');
+            const emptyState = document.getElementById('empty-state');
+            const errorState = document.getElementById('error-state');
+            const errorMessage = document.getElementById('error-message');
+            const refreshBtn = document.getElementById('refresh-btn');
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+
+            const API_BASE_URL = '/api';
+
+            const sourceIcons = {
+                'Gmail': '📧', 'GitHub': '💻', 'Slack': '💬', 'Notion': '📝',
+                'Google Calendar': '📅', 'default': '🔔'
+            };
+
+            const fetchDailyPlan = async () => {
+                showLoader();
+                try {
+                    const response = await fetch(`${API_BASE_URL}/daily-plan`);
+                    if (!response.ok) {
+                        const errData = await response.json();
+                        throw new Error(errData.error || `HTTP error! status: ${response.status}`);
+                    }
+                    const tasks = await response.json();
+                    renderTasks(tasks);
+                } catch (error) {
+                    console.error("Failed to fetch daily plan:", error);
+                    showError(error.message);
+                }
+            };
+
+            const renderTasks = (tasks) => {
+                hideAllStates();
+                taskListContainer.innerHTML = ''; 
+                if (!tasks || tasks.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+                const taskGrid = document.createElement('div');
+                taskGrid.className = 'grid grid-cols-1 gap-6';
+                tasks.forEach(task => taskGrid.appendChild(createTaskCard(task)));
+                taskListContainer.appendChild(taskGrid);
+            };
+
+            const createTaskCard = (task) => {
+                const card = document.createElement('div');
+                card.className = 'task-card bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden';
+                card.dataset.taskId = task.id;
+                const icon = sourceIcons[task.source] || sourceIcons['default'];
+                card.innerHTML = `
+                    <div class="p-5">
+                        <div class="flex items-center mb-3">
+                            <span class="text-2xl mr-3">${icon}</span>
+                            <h2 class="text-lg font-semibold text-gray-800">${task.source}</h2>
+                        </div>
+                        <p class="text-gray-700 mb-4">${task.summary}</p>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h3 class="text-sm font-semibold text-gray-600 mb-2">🤖 Proposed Action:</h3>
+                            <div class="action-code">${JSON.stringify(task.proposed_action, null, 2)}</div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-5 py-3 flex justify-end items-center space-x-3">
+                        <div class="spinner hidden w-5 h-5 border-2 border-t-transparent border-gray-400 rounded-full animate-spin"></div>
+                        <button class="btn-reject text-white font-bold py-2 px-4 rounded-lg transition-opacity duration-150 hover:opacity-90" data-action="reject">Reject</button>
+                        <button class="btn-approve text-white font-bold py-2 px-4 rounded-lg transition-opacity duration-150 hover:opacity-90" data-action="approve">Approve</button>
+                    </div>
+                `;
+                const approveBtn = card.querySelector('[data-action="approve"]');
+                const rejectBtn = card.querySelector('[data-action="reject"]');
+                const spinner = card.querySelector('.spinner');
+                approveBtn.addEventListener('click', () => handleAction(task, 'approve', card, [approveBtn, rejectBtn], spinner));
+                rejectBtn.addEventListener('click', () => handleAction(task, 'reject', card, [approveBtn, rejectBtn], spinner));
+                return card;
+            };
+
+            const handleAction = async (task, action, cardElement, buttons, spinner) => {
+                buttons.forEach(btn => btn.style.display = 'none');
+                spinner.classList.remove('hidden');
+                try {
+                    const endpoint = action === 'approve' ? `${API_BASE_URL}/approve` : `${API_BASE_URL}/reject`;
+                    const body = action === 'approve' ? JSON.stringify(task.proposed_action) : JSON.stringify({ id: task.id });
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: body
+                    });
+                    if (!response.ok) throw new Error(`Action failed with status: ${response.status}`);
+                    showToast(`Task ${action}d successfully!`, 'success');
+                    removeCard(cardElement);
+                } catch (error) {
+                    console.error(`Failed to ${action} task:`, error);
+                    showToast(`Error performing action. Please try again.`, 'error');
+                    buttons.forEach(btn => btn.style.display = 'inline-block');
+                    spinner.classList.add('hidden');
+                }
+            };
+
+            const removeCard = (cardElement) => {
+                cardElement.classList.add('removing');
+                cardElement.addEventListener('transitionend', () => {
+                    cardElement.remove();
+                    if (taskListContainer.querySelectorAll('.task-card').length === 0) {
+                        emptyState.classList.remove('hidden');
+                    }
+                });
+            };
+
+            const showToast = (message, type = 'success') => {
+                toastMessage.textContent = message;
+                toast.className = `fixed bottom-5 right-5 text-white py-2 px-5 rounded-lg shadow-lg transition-opacity duration-300 opacity-100 ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}`;
+                setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+            };
+
+            const showLoader = () => {
+                hideAllStates();
+                loader.classList.remove('hidden');
+            };
+            const showError = (message) => {
+                hideAllStates();
+                errorMessage.textContent = message;
+                errorState.classList.remove('hidden');
+            };
+            const hideAllStates = () => {
+                taskListContainer.innerHTML = '';
+                loader.classList.add('hidden');
+                emptyState.classList.add('hidden');
+                errorState.classList.add('hidden');
+            };
+
+            refreshBtn.addEventListener('click', fetchDailyPlan);
+            fetchDailyPlan();
+        });
+    </script>
+</body>
+</html>
