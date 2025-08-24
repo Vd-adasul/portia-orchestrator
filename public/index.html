@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portia Orchestrator Dashboard</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7ff;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin-left: 20px;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+        
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            background-color: white;
+            border-radius: 10px;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--gray);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 2rem 0;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card h3 {
+            color: var(--secondary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card h3 i {
+            margin-right: 10px;
+        }
+        
+        .service-status {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: var(--light);
+        }
+        
+        .status-connected {
+            color: var(--success);
+            font-weight: bold;
+        }
+        
+        .status-disconnected {
+            color: var(--warning);
+            font-weight: bold;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.3s;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            background: var(--secondary);
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+        }
+        
+        .btn-warning:hover {
+            background: #c1121f;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: var(--gray);
+            margin-top: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">Portia Orchestrator</div>
+            <ul class="nav-links">
+                <li><a href="#dashboard">Dashboard</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#settings">Settings</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <section class="hero">
+            <h1>Automation Orchestrator</h1>
+            <p>Connect and manage your Gmail, Calendar, Slack, GitHub, and Notion integrations in one place</p>
+        </section>
+
+        <section class="dashboard" id="dashboard">
+            <div class="card">
+                <h3><i>📧</i> Gmail Integration</h3>
+                <div class="service-status">
+                    <span>Status:</span>
+                    <span class="status-connected" id="gmail-status">Connected</span>
+                </div>
+                <p>Read and send emails through your Gmail account</p>
+                <button class="btn" id="gmail-btn">Manage</button>
+            </div>
+
+            <div class="card">
+                <h3><i>📅</i> Calendar Integration</h3>
+                <div class="service-status">
+                    <span>Status:</span>
+                    <span class="status-connected" id="calendar-status">Connected</span>
+                </div>
+                <p>Access and manage your Google Calendar events</p>
+                <button class="btn" id="calendar-btn">Manage</button>
+            </div>
+
+            <div class="card">
+                <h3><i>💬</i> Slack Integration</h3>
+                <div class="service-status">
+                    <span>Status:</span>
+                    <span class="status-disconnected" id="slack-status">Disconnected</span>
+                </div>
+                <p>Connect to your Slack workspace for notifications</p>
+                <button class="btn" id="slack-btn">Connect</button>
+            </div>
+
+            <div class="card">
+                <h3><i>🐙</i> GitHub Integration</h3>
+                <div class="service-status">
+                    <span>Status:</span>
+                    <span class="status-disconnected" id="github-status">Disconnected</span>
+                </div>
+                <p>Manage repositories and receive updates</p>
+                <button class="btn" id="github-btn">Connect</button>
+            </div>
+
+            <div class="card">
+                <h3><i>📝</i> Notion Integration</h3>
+                <div class="service-status">
+                    <span>Status:</span>
+                    <span class="status-disconnected" id="notion-status">Disconnected</span>
+                </div>
+                <p>Sync with your Notion workspace</p>
+                <button class="btn" id="notion-btn">Connect</button>
+            </div>
+
+            <div class="card">
+                <h3><i>🔄</i> Automation Status</h3>
+                <div class="service-status">
+                    <span>Active Automations:</span>
+                    <span>3</span>
+                </div>
+                <div class="service-status">
+                    <span>Last Run:</span>
+                    <span>2 hours ago</span>
+                </div>
+                <button class="btn">View Logs</button>
+            </div>
+        </section>
+
+        <section id="settings">
+            <div class="card">
+                <h3>API Configuration</h3>
+                <p>Manage your API keys and service configurations</p>
+                <button class="btn">Configuration</button>
+                <button class="btn btn-warning" id="reset-btn">Reset Connections</button>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>Portia Orchestrator &copy; 2023 | Secure API Integration Platform</p>
+    </footer>
+
+    <script>
+        // Simple frontend functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Simulate checking connection status
+            setTimeout(() => {
+                document.getElementById('slack-status').textContent = 'Connected';
+                document.getElementById('slack-status').className = 'status-connected';
+                document.getElementById('slack-btn').textContent = 'Manage';
+            }, 2000);
+            
+            // Button handlers
+            document.getElementById('reset-btn').addEventListener('click', function() {
+                if(confirm('Are you sure you want to reset all connections?')) {
+                    alert('Connections reset. You will need to re-authenticate.');
+                }
+            });
+            
+            // Simulate API calls to backend
+            const serviceButtons = {
+    gmail: 'communication',
+    calendar: 'scheduling',
+    slack: 'communication',
+    github: 'github',
+    notion: 'productivity'
+};
+
+Object.keys(serviceButtons).forEach(service => {
+    document.getElementById(`${service}-btn`).addEventListener('click', function() {
+        fetch(`/api/tools/${serviceButtons[service]}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => console.log(data))
+            .catch(err => console.error(err));
+    });
+});
+        });
+    </script>
+</body>
+</html>

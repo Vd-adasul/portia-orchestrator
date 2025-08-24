@@ -1,1 +1,23 @@
-.vercel
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.Python
+build/
+dist/
+venv/
+*.egg-info
+*.egg
+
+# IDE files
+.pytest_cache/
+.coverage
+.tox/
+
+# Environment variables
+.env
+# Google secrets
+credentials.json
+token.json
